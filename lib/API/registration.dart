@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'Home.dart';
+import 'models/user_model.dart';
 
 class Registeration extends StatefulWidget {
   const Registeration({super.key});
@@ -40,7 +41,7 @@ class _RegisterationState extends State<Registeration> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("User Register Successfully")));
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>HomeAPI()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>HomeAPI(user: User.fromJson(response.body as Map<String, dynamic>),)));
       }
       else{
         ScaffoldMessenger.of(
