@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'Home.dart';
+import 'loginvalidation.dart';
 import 'models/user_model.dart';
 
 class Registeration extends StatefulWidget {
@@ -226,14 +227,13 @@ class _RegisterationState extends State<Registeration> {
                     const SizedBox(height: 15),
 
                     TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        "Already have an account? Login",
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const APILogin()),
+                        );
+                      },
+                      child: Text("Already have an account? Login", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600,),),
                     ),
                   ],
                 ),
