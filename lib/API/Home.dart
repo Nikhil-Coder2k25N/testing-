@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'EditAPI/editpage.dart';
 import 'models/user_model.dart';
 
 class HomeAPI extends StatefulWidget {
@@ -53,6 +54,27 @@ class _HomeAPIState extends State<HomeAPI> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.white),
+            onPressed: () async {
+              final updatedUser = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditProfilePage(user: user),
+                ),
+              );
+
+              if (updatedUser != null) {
+                setState(() {
+                  user = updatedUser;
+                });
+              }
+            },
+          ),
+        ],
+        // leading: IconButton(onPressed: (){
+        // }, icon: Icon(Icons.edit)),
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Colors.purple,
         centerTitle: true,
