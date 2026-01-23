@@ -1,40 +1,44 @@
 import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'EditAPI/editpage.dart';
+import 'package:http/http.dart' as http;
+
 import 'models/user_model.dart';
 
 class HomeAPI extends StatefulWidget {
-  final User user; // ✅ MUST STORE USER
-
-  const HomeAPI({super.key, required this.user});
+  const HomeAPI({super.key, required User user});
 
   @override
   State<HomeAPI> createState() => _HomeAPIState();
 }
 
 class _HomeAPIState extends State<HomeAPI> {
+  // 🔹 Blink logic
   bool _visible = true;
   Timer? _blinkTimer;
 
-  late User user; // ✅ non-null safe
+  // 🔹 API state
+  User? user;
+  bool loading = true;
+  String? errorMsg;
 
   @override
   void initState() {
     super.initState();
 
-    // ✅ Assign passed user
-    user = widget.user;
-
     _blinkTimer = Timer.periodic(
       const Duration(milliseconds: 800),
-          (_) {
+          (timer) {
         setState(() {
           _visible = !_visible;
         });
       },
     );
+
+    fetchProfile();
   }
 
   @override
@@ -43,38 +47,57 @@ class _HomeAPIState extends State<HomeAPI> {
     super.dispose();
   }
 
-  String valueOrNA(dynamic v) {
-    if (v == null || v.toString().isEmpty) {
+  // 🔹 API CALL
+  Future<void> fetchProfile() async {
+    try {
+      final response = await http.get(
+        Uri.parse("https://YOUR_API_URL_HERE"),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+
+        setState(() {
+          user = User.fromJson(jsonData);
+          loading = false;
+        });
+      } else {
+        setState(() {
+          errorMsg = "Server Error";
+          loading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMsg = e.toString();
+        loading = false;
+      });
+    }
+  }
+
+  String valueOrNA(dynamic value) {
+    if (value == null || value.toString().isEmpty) {
       return "N/A";
     }
-    return v.toString();
+    return value.toString();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (errorMsg != null) {
+      return Scaffold(
+        body: Center(child: Text(errorMsg!)),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.white),
-            onPressed: () async {
-              final updatedUser = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EditProfilePage(user: user),
-                ),
-              );
-
-              if (updatedUser != null) {
-                setState(() {
-                  user = updatedUser;
-                });
-              }
-            },
-          ),
-        ],
-        // leading: IconButton(onPressed: (){
-        // }, icon: Icon(Icons.edit)),
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Colors.purple,
         centerTitle: true,
@@ -87,7 +110,7 @@ class _HomeAPIState extends State<HomeAPI> {
           ),
         ),
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.white12,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -101,11 +124,18 @@ class _HomeAPIState extends State<HomeAPI> {
                   CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.black12,
-                    child: const Icon(Icons.person, size: 50),
+                    backgroundImage: user!.image != null
+                        ? NetworkImage(
+                      "https://YOUR_IMAGE_PATH/${user!.image}",
+                    )
+                        : null,
+                    child: user!.image == null
+                        ? const Icon(Icons.person, size: 50)
+                        : null,
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    valueOrNA(user.name),
+                    valueOrNA(user!.name),
                     style: GoogleFonts.aBeeZee(
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
@@ -119,14 +149,18 @@ class _HomeAPIState extends State<HomeAPI> {
                         opacity: _visible
                             ? const AlwaysStoppedAnimation(1)
                             : const AlwaysStoppedAnimation(0),
-                        child: const CircleAvatar(
-                          radius: 4,
-                          backgroundColor: Colors.green,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        user.status == 1 ? "Active User" : "Inactive",
+                        user!.status == 1 ? "Active User" : "Inactive",
                         style: GoogleFonts.aBeeZee(
                           fontSize: 14,
                           color: Colors.black54,
@@ -148,17 +182,17 @@ class _HomeAPIState extends State<HomeAPI> {
                 infoRow(
                   CupertinoIcons.mail,
                   "EMAIL",
-                  valueOrNA(user.email),
+                  valueOrNA(user!.email),
                 ),
                 infoRow(
                   CupertinoIcons.phone,
                   "PHONE",
-                  valueOrNA(user.phone),
+                  valueOrNA(user!.phone),
                 ),
                 infoRow(
                   CupertinoIcons.location_solid,
                   "ADDRESS",
-                  valueOrNA(user.address),
+                  valueOrNA(user!.address),
                 ),
               ],
             ),
@@ -172,17 +206,17 @@ class _HomeAPIState extends State<HomeAPI> {
                 infoRow(
                   CupertinoIcons.calendar,
                   "DOB",
-                  valueOrNA(user.dob),
+                  valueOrNA(user!.dob),
                 ),
                 infoRow(
                   CupertinoIcons.briefcase,
                   "INSTITUTE",
-                  valueOrNA(user.institute),
+                  valueOrNA(user!.institute),
                 ),
                 infoRow(
                   CupertinoIcons.person,
                   "USER TYPE",
-                  valueOrNA(user.userType),
+                  valueOrNA(user!.userType),
                 ),
               ],
             ),
@@ -192,7 +226,7 @@ class _HomeAPIState extends State<HomeAPI> {
     );
   }
 
-  /// 🔹 REUSABLE CARD
+  /// 🔹 Reusable UI
   Widget buildCard(String title, List<Widget> children) {
     return Container(
       width: double.infinity,
@@ -208,7 +242,9 @@ class _HomeAPIState extends State<HomeAPI> {
             width: double.infinity,
             decoration: const BoxDecoration(
               color: Colors.black12,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
             ),
             padding: const EdgeInsets.only(left: 15, top: 6),
             child: Text(
@@ -226,7 +262,6 @@ class _HomeAPIState extends State<HomeAPI> {
     );
   }
 
-  /// 🔹 INFO ROW
   Widget infoRow(IconData icon, String label, String value) {
     return Column(
       children: [
