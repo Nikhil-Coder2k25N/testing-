@@ -2,85 +2,88 @@ class User {
   int? id;
   String? name;
   String? email;
-  int? phone;
+  String? phone;          // ✅ ALWAYS String
   String? userType;
-  int? status;
-  Null? dob;
+  bool? status;           // ✅ bool
+  String? dob;
   String? institute;
   int? finalMarks;
-  Null? address;
-  Null? city;
-  Null? state;
-  Null? pincode;
+  String? address;
+  String? city;
+  String? state;
+  String? pincode;
   String? image;
-  Null? emailVerifiedAt;
+  String? emailVerifiedAt;
   String? createdAt;
   String? updatedAt;
-  Null? logCountry;
+  String? logCountry;
 
-  //Constructor
-  User(
-      {
-        required this.id,
-        this.name,
-        this.email,
-        this.phone,
-        this.userType,
-        this.status,
-        this.dob,
-        this.institute,
-        this.finalMarks,
-        this.address,
-        this.city,
-        this.state,
-        this.pincode,
-        this.image,
-        this.emailVerifiedAt,
-        this.createdAt,
-        this.updatedAt,
-        this.logCountry});
+  User({
+    this.id,
+    this.name,
+    this.email,
+    this.phone,
+    this.userType,
+    this.status,
+    this.dob,
+    this.institute,
+    this.finalMarks,
+    this.address,
+    this.city,
+    this.state,
+    this.pincode,
+    this.image,
+    this.emailVerifiedAt,
+    this.createdAt,
+    this.updatedAt,
+    this.logCountry,
+  });
 
-  User.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    name = json['name'];
-    email = json['email'];
-    phone = json['phone'];
-    userType = json['user_type'];
-    status = json['status'];
-    dob = json['dob'];
-    institute = json['institute'];
-    finalMarks = json['final_marks'];
-    address = json['address'];
-    city = json['city'];
-    state = json['state'];
-    pincode = json['pincode'];
-    image = json['image'];
-    emailVerifiedAt = json['email_verified_at'];
-    createdAt = json['created_at'];
-    updatedAt = json['updated_at'];
-    logCountry = json['log_country'];
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: int.tryParse(json['id'].toString()),        // 🔥 SAFE
+      name: json['name']?.toString(),
+      email: json['email']?.toString(),
+      phone: json['phone']?.toString(),               // 🔥 FIX
+      userType: json['user_type']?.toString(),
+      status: json['status'] == true || json['status'] == 1,
+      dob: json['dob']?.toString(),
+      institute: json['institute']?.toString(),
+      finalMarks: json['final_marks'] != null
+          ? int.tryParse(json['final_marks'].toString())
+          : null,
+      address: json['address']?.toString(),
+      city: json['city']?.toString(),
+      state: json['state']?.toString(),
+      pincode: json['pincode']?.toString(),
+      image: json['image']?.toString(),
+      emailVerifiedAt: json['email_verified_at']?.toString(),
+      createdAt: json['created_at']?.toString(),
+      updatedAt: json['updated_at']?.toString(),
+      logCountry: json['log_country']?.toString(),
+    );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['email'] = this.email;
-    data['phone'] = this.phone;
-    data['user_type'] = this.userType;
-    data['status'] = this.status;
-    data['dob'] = this.dob;
-    data['institute'] = this.institute;
-    data['final_marks'] = this.finalMarks;
-    data['address'] = this.address;
-    data['city'] = this.city;
-    data['state'] = this.state;
-    data['pincode'] = this.pincode;
-    data['image'] = this.image;
-    data['email_verified_at'] = this.emailVerifiedAt;
-    data['created_at'] = this.createdAt;
-    data['updated_at'] = this.updatedAt;
-    data['log_country'] = this.logCountry;
-    return data;
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'phone': phone,
+      'user_type': userType,
+      'status': status,
+      'dob': dob,
+      'institute': institute,
+      'final_marks': finalMarks,
+      'address': address,
+      'city': city,
+      'state': state,
+      'pincode': pincode,
+      'image': image,
+      'email_verified_at': emailVerifiedAt,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
+      'log_country': logCountry,
+    };
   }
 }

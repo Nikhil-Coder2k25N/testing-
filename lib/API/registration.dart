@@ -21,38 +21,58 @@ class _RegisterationState extends State<Registeration> {
   final TextEditingController _password = TextEditingController();
   final TextEditingController _confirmPassword = TextEditingController();
 
-  Future<void> _registerUser()  async {
+  Future<void> _registerUser() async {
     if (_formKey.currentState!.validate()) {
-      final response =  await http.post(
-          Uri.parse('https://sakshamdigitaltechnology.com/api/register'),
-          body: {
-            'name': _name.text,
-            'email': _email.text,
-            'phone': _phone.text,
-            'password': _password.text,
-            'password_confirmation': _confirmPassword.text,
-          }
+
+      final response = await http.post(
+        Uri.parse('https://sakshamdigitaltechnology.com/api/register'),
+        body: {
+          'name': _name.text.trim(),
+          'email': _email.text.trim(),
+          'phone': _phone.text.trim(),
+          'password': _password.text.trim(),
+          'password_confirmation': _confirmPassword.text.trim(),
+        },
       );
 
-      print("response ${response.body}");
-      print("response ${response.statusCode}");
+      final Map<String, dynamic> jsonData = jsonDecode(response.body);
+      print(jsonData);
 
-      if(response.statusCode==200 || response.statusCode==201)
-      {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("User Register Successfully")));
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>HomeAPI(user: User.fromJson(response.body as Map<String, dynamic>),)));
+      // 🔴 ERROR CASE
+      if (jsonData['status'] == 'error') {
+
+        Map<String, dynamic> errors = jsonData['errors'];
+
+        String errorMessage = '';
+
+        errors.forEach((key, value) {
+          errorMessage += value[0] + '\n';
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+
+        return;
       }
-      else{
-        ScaffoldMessenger.of(
+
+      // 🟢 SUCCESS CASE (jab API user data bheje)
+      if (jsonData['status'] == 'success') {
+
+        final user = User.fromJson(jsonData['user']); // 🔥 FIXED
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("User Registered Successfully")),
+        );
+
+        Navigator.pushAndRemoveUntil(
           context,
-        ).showSnackBar(SnackBar(content: Text(response.body)));
+          MaterialPageRoute(
+            builder: (context) => HomeAPI(user: user),
+          ),
+              (route) => false,
+        );
       }
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("FIll all the fields")));
     }
   }
 

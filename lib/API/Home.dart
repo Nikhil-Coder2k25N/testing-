@@ -1,34 +1,26 @@
 import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
-
+import 'package:myfirstclass/API/profileupdateAPI.dart';
 import 'models/user_model.dart';
 
 class HomeAPI extends StatefulWidget {
-  const HomeAPI({super.key, required User user});
+  final User user;
+
+  const HomeAPI({super.key, required this.user});
 
   @override
   State<HomeAPI> createState() => _HomeAPIState();
 }
 
 class _HomeAPIState extends State<HomeAPI> {
-  // 🔹 Blink logic
   bool _visible = true;
   Timer? _blinkTimer;
-
-  // 🔹 API state
-  User? user;
-  bool loading = true;
-  String? errorMsg;
 
   @override
   void initState() {
     super.initState();
-
     _blinkTimer = Timer.periodic(
       const Duration(milliseconds: 800),
           (timer) {
@@ -37,42 +29,12 @@ class _HomeAPIState extends State<HomeAPI> {
         });
       },
     );
-
-    fetchProfile();
   }
 
   @override
   void dispose() {
     _blinkTimer?.cancel();
     super.dispose();
-  }
-
-  // 🔹 API CALL
-  Future<void> fetchProfile() async {
-    try {
-      final response = await http.get(
-        Uri.parse("https://YOUR_API_URL_HERE"),
-      );
-
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
-
-        setState(() {
-          user = User.fromJson(jsonData);
-          loading = false;
-        });
-      } else {
-        setState(() {
-          errorMsg = "Server Error";
-          loading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        errorMsg = e.toString();
-        loading = false;
-      });
-    }
   }
 
   String valueOrNA(dynamic value) {
@@ -84,93 +46,79 @@ class _HomeAPIState extends State<HomeAPI> {
 
   @override
   Widget build(BuildContext context) {
-    if (loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (errorMsg != null) {
-      return Scaffold(
-        body: Center(child: Text(errorMsg!)),
-      );
-    }
+    final user = widget.user; // ✅ LOCAL REFERENCE
 
     return Scaffold(
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Colors.purple,
         centerTitle: true,
         title: Text(
           "My Profile",
           style: GoogleFonts.aBeeZee(
             fontWeight: FontWeight.bold,
-            fontSize: 18,
             color: Colors.white,
           ),
         ),
       ),
-      backgroundColor: Colors.white12,
+      backgroundColor: Colors.grey.shade100,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+
             /// 🔹 PROFILE HEADER
-            SizedBox(
-              height: 200,
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.black12,
-                    backgroundImage: user!.image != null
-                        ? NetworkImage(
-                      "https://YOUR_IMAGE_PATH/${user!.image}",
+            Column(
+              children: [
+                CircleAvatar(
+                  radius: 55,
+                  backgroundColor: Colors.black12,
+                  child: ClipOval(
+                    child: (user.image != null &&
+                        user.image!.isNotEmpty &&
+                        user.image != "profile.png") // 🔥 MOST IMPORTANT LINE
+                        ? Image.network(
+                      "https://sakshamdigitaltechnology.com/profile/${user.image}",
+                      width: 110,
+                      height: 110,
+                      fit: BoxFit.cover,
                     )
-                        : null,
-                    child: user!.image == null
-                        ? const Icon(Icons.person, size: 50)
-                        : null,
+                        : const Icon(Icons.person, size: 50),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    valueOrNA(user!.name),
-                    style: GoogleFonts.aBeeZee(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
+                ),
+
+                const SizedBox(height: 10),
+                Text(
+                  valueOrNA(user.name),
+                  style: GoogleFonts.aBeeZee(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FadeTransition(
+                      opacity: _visible
+                          ? const AlwaysStoppedAnimation(1)
+                          : const AlwaysStoppedAnimation(0),
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      FadeTransition(
-                        opacity: _visible
-                            ? const AlwaysStoppedAnimation(1)
-                            : const AlwaysStoppedAnimation(0),
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Colors.green,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        user!.status == 1 ? "Active User" : "Inactive",
-                        style: GoogleFonts.aBeeZee(
-                          fontSize: 14,
-                          color: Colors.black54,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 6),
+                    Text(
+                      user.status == true ? "Active User" : "Inactive",
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                  ],
+                ),
+              ],
             ),
 
             const SizedBox(height: 25),
@@ -179,20 +127,12 @@ class _HomeAPIState extends State<HomeAPI> {
             buildCard(
               "CONTACT DETAILS",
               [
-                infoRow(
-                  CupertinoIcons.mail,
-                  "EMAIL",
-                  valueOrNA(user!.email),
-                ),
-                infoRow(
-                  CupertinoIcons.phone,
-                  "PHONE",
-                  valueOrNA(user!.phone),
-                ),
+                infoRow(CupertinoIcons.mail, "EMAIL", valueOrNA(user.email)),
+                infoRow(CupertinoIcons.phone, "PHONE", valueOrNA(user.phone)),
                 infoRow(
                   CupertinoIcons.location_solid,
                   "ADDRESS",
-                  valueOrNA(user!.address),
+                  valueOrNA(user.address),
                 ),
               ],
             ),
@@ -203,22 +143,55 @@ class _HomeAPIState extends State<HomeAPI> {
             buildCard(
               "PERSONAL INFO",
               [
+                infoRow(CupertinoIcons.calendar, "DOB", valueOrNA(user.dob)),
                 infoRow(
-                  CupertinoIcons.calendar,
-                  "DOB",
-                  valueOrNA(user!.dob),
+                  CupertinoIcons.building_2_fill,
+                  "CITY",
+                  valueOrNA(user.city),
                 ),
+                infoRow(CupertinoIcons.map, "STATE", valueOrNA(user.state)),
                 infoRow(
-                  CupertinoIcons.briefcase,
-                  "INSTITUTE",
-                  valueOrNA(user!.institute),
+                  CupertinoIcons.number,
+                  "PINCODE",
+                  valueOrNA(user.pincode),
                 ),
                 infoRow(
                   CupertinoIcons.person,
                   "USER TYPE",
-                  valueOrNA(user!.userType),
+                  valueOrNA(user.userType),
                 ),
               ],
+            ),
+
+            const SizedBox(height: 20),
+
+            /// 🔹 EDIT PROFILE BUTTON
+            SizedBox(
+              width: double.infinity,
+              height: 45,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () async {
+                  final updated = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => UpdateProfile(
+                        user: user,
+                        apiToken: "ta4uTtriXsQQbg4F8kb0ws4EGh73",
+                        // ❗ YAHAN URL NAHI, LOGIN TOKEN AAYEGA
+                      ),
+                    ),
+                  );
+
+                  if (updated == true) {
+                    setState(() {}); // refresh UI
+                  }
+                },
+                child: const Text("Edit Profile"),
+              ),
             ),
           ],
         ),
@@ -226,33 +199,31 @@ class _HomeAPIState extends State<HomeAPI> {
     );
   }
 
-  /// 🔹 Reusable UI
+  /// 🔹 Reusable Card
   Widget buildCard(String title, List<Widget> children) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(color: Colors.black12),
         borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 6),
+        ],
       ),
       child: Column(
         children: [
           Container(
-            height: 30,
             width: double.infinity,
+            padding: const EdgeInsets.all(10),
             decoration: const BoxDecoration(
               color: Colors.black12,
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
             ),
-            padding: const EdgeInsets.only(left: 15, top: 6),
             child: Text(
               title,
               style: const TextStyle(
-                fontSize: 13,
-                color: Colors.black54,
                 fontWeight: FontWeight.bold,
+                color: Colors.black54,
               ),
             ),
           ),
@@ -262,11 +233,12 @@ class _HomeAPIState extends State<HomeAPI> {
     );
   }
 
+  /// 🔹 Info Row (NO IMAGE HERE ❌)
   Widget infoRow(IconData icon, String label, String value) {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(10),
           child: Row(
             children: [
               CircleAvatar(
@@ -288,19 +260,14 @@ class _HomeAPIState extends State<HomeAPI> {
                       ),
                     ),
                     const SizedBox(height: 5),
-                    Text(
-                      value,
-                      style: const TextStyle(fontSize: 14),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    Text(value, style: const TextStyle(fontSize: 14)),
                   ],
                 ),
               ),
             ],
           ),
         ),
-        const Divider(),
+        const Divider(height: 1),
       ],
     );
   }
