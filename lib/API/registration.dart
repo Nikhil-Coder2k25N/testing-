@@ -65,13 +65,19 @@ class _RegisterationState extends State<Registeration> {
           const SnackBar(content: Text("User Registered Successfully")),
         );
 
+        final String token = jsonData['token'].toString();
+
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
-            builder: (context) => HomeAPI(user: user),
+            builder: (context) => HomeAPI(
+              user: user,
+              apiToken: token, // 🔥 REAL TOKEN FROM REGISTER API
+            ),
           ),
               (route) => false,
         );
+
       }
     }
   }

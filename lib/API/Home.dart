@@ -7,8 +7,13 @@ import 'models/user_model.dart';
 
 class HomeAPI extends StatefulWidget {
   final User user;
+  final String apiToken; // 🔥 ADD TOKEN
 
-  const HomeAPI({super.key, required this.user});
+  const HomeAPI({
+    super.key,
+    required this.user,
+    required this.apiToken,
+  });
 
   @override
   State<HomeAPI> createState() => _HomeAPIState();
@@ -46,7 +51,7 @@ class _HomeAPIState extends State<HomeAPI> {
 
   @override
   Widget build(BuildContext context) {
-    final user = widget.user; // ✅ LOCAL REFERENCE
+    final user = widget.user;
 
     return Scaffold(
       appBar: AppBar(
@@ -66,7 +71,7 @@ class _HomeAPIState extends State<HomeAPI> {
         child: Column(
           children: [
 
-            /// 🔹 PROFILE HEADER
+            /// PROFILE HEADER
             Column(
               children: [
                 CircleAvatar(
@@ -75,7 +80,7 @@ class _HomeAPIState extends State<HomeAPI> {
                   child: ClipOval(
                     child: (user.image != null &&
                         user.image!.isNotEmpty &&
-                        user.image != "profile.png") // 🔥 MOST IMPORTANT LINE
+                        user.image != "profile.png")
                         ? Image.network(
                       "https://sakshamdigitaltechnology.com/profile/${user.image}",
                       width: 110,
@@ -85,7 +90,6 @@ class _HomeAPIState extends State<HomeAPI> {
                         : const Icon(Icons.person, size: 50),
                   ),
                 ),
-
                 const SizedBox(height: 10),
                 Text(
                   valueOrNA(user.name),
@@ -94,78 +98,30 @@ class _HomeAPIState extends State<HomeAPI> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    FadeTransition(
-                      opacity: _visible
-                          ? const AlwaysStoppedAnimation(1)
-                          : const AlwaysStoppedAnimation(0),
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      user.status == true ? "Active User" : "Inactive",
-                      style: const TextStyle(color: Colors.black54),
-                    ),
-                  ],
-                ),
               ],
             ),
 
             const SizedBox(height: 25),
 
-            /// 🔹 CONTACT DETAILS
-            buildCard(
-              "CONTACT DETAILS",
-              [
-                infoRow(CupertinoIcons.mail, "EMAIL", valueOrNA(user.email)),
-                infoRow(CupertinoIcons.phone, "PHONE", valueOrNA(user.phone)),
-                infoRow(
-                  CupertinoIcons.location_solid,
-                  "ADDRESS",
-                  valueOrNA(user.address),
-                ),
-              ],
-            ),
+            buildCard("CONTACT DETAILS", [
+              infoRow(CupertinoIcons.mail, "EMAIL", valueOrNA(user.email)),
+              infoRow(CupertinoIcons.phone, "PHONE", valueOrNA(user.phone)),
+              infoRow(CupertinoIcons.location_solid, "ADDRESS", valueOrNA(user.address)),
+            ]),
 
             const SizedBox(height: 15),
 
-            /// 🔹 PERSONAL INFO
-            buildCard(
-              "PERSONAL INFO",
-              [
-                infoRow(CupertinoIcons.calendar, "DOB", valueOrNA(user.dob)),
-                infoRow(
-                  CupertinoIcons.building_2_fill,
-                  "CITY",
-                  valueOrNA(user.city),
-                ),
-                infoRow(CupertinoIcons.map, "STATE", valueOrNA(user.state)),
-                infoRow(
-                  CupertinoIcons.number,
-                  "PINCODE",
-                  valueOrNA(user.pincode),
-                ),
-                infoRow(
-                  CupertinoIcons.person,
-                  "USER TYPE",
-                  valueOrNA(user.userType),
-                ),
-              ],
-            ),
+            buildCard("PERSONAL INFO", [
+              infoRow(CupertinoIcons.calendar, "DOB", valueOrNA(user.dob)),
+              infoRow(CupertinoIcons.building_2_fill, "CITY", valueOrNA(user.city)),
+              infoRow(CupertinoIcons.map, "STATE", valueOrNA(user.state)),
+              infoRow(CupertinoIcons.number, "PINCODE", valueOrNA(user.pincode)),
+              infoRow(CupertinoIcons.person, "USER TYPE", valueOrNA(user.userType)),
+            ]),
 
             const SizedBox(height: 20),
 
-            /// 🔹 EDIT PROFILE BUTTON
+            /// EDIT PROFILE BUTTON
             SizedBox(
               width: double.infinity,
               height: 45,
@@ -180,14 +136,13 @@ class _HomeAPIState extends State<HomeAPI> {
                     MaterialPageRoute(
                       builder: (_) => UpdateProfile(
                         user: user,
-                        apiToken: "ta4uTtriXsQQbg4F8kb0ws4EGh73",
-                        // ❗ YAHAN URL NAHI, LOGIN TOKEN AAYEGA
+                        apiToken: widget.apiToken, // ✅ REAL TOKEN
                       ),
                     ),
                   );
 
                   if (updated == true) {
-                    setState(() {}); // refresh UI
+                    setState(() {});
                   }
                 },
                 child: const Text("Edit Profile"),
@@ -199,16 +154,13 @@ class _HomeAPIState extends State<HomeAPI> {
     );
   }
 
-  /// 🔹 Reusable Card
   Widget buildCard(String title, List<Widget> children) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 6),
-        ],
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
       ),
       child: Column(
         children: [
@@ -219,13 +171,9 @@ class _HomeAPIState extends State<HomeAPI> {
               color: Colors.black12,
               borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
             ),
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.black54,
-              ),
-            ),
+            child: Text(title,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.black54)),
           ),
           ...children,
         ],
@@ -233,7 +181,6 @@ class _HomeAPIState extends State<HomeAPI> {
     );
   }
 
-  /// 🔹 Info Row (NO IMAGE HERE ❌)
   Widget infoRow(IconData icon, String label, String value) {
     return Column(
       children: [
@@ -251,14 +198,11 @@ class _HomeAPIState extends State<HomeAPI> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black54,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Text(label,
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                            fontWeight: FontWeight.bold)),
                     const SizedBox(height: 5),
                     Text(value, style: const TextStyle(fontSize: 14)),
                   ],

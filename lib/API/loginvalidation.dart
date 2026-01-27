@@ -46,12 +46,15 @@ class _APILoginState extends State<APILogin> {
             backgroundColor: Colors.green,
           ),
         );
-
+        final String token = data['token'].toString(); // 🔥 TOKEN
         Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomeAPI(user: user),
-          ),
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomeAPI(
+                user: user,
+                apiToken: token, // ✅ PASS TOKEN
+              ),
+            )
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
