@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'Home.dart';
 import 'apiforgetpass.dart';
-import 'models/user_model.dart';
 import 'registration.dart';
 
 class APILogin extends StatefulWidget {
@@ -15,7 +15,6 @@ class APILogin extends StatefulWidget {
 
 class _APILoginState extends State<APILogin> {
   final _formKey = GlobalKey<FormState>();
-
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
 
@@ -31,14 +30,20 @@ class _APILoginState extends State<APILogin> {
         Uri.parse("https://sakshamdigitaltechnology.com/api/login"),
         body: {
           "email": _email.text.trim(),
-          "password": _password.text,
+          "password": _password.text.trim(),
         },
       );
 
-      final data = jsonDecode(response.body);
+      final prefs = await SharedPreferences.getInstance();
 
-      if (response.statusCode == 200 && data['user'] != null) {
-        final User user = User.fromJson(data['user']);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // ✅ Save login credentials like FirstScreen logic
+        await prefs.setString('email', _email.text.trim());
+        await prefs.setString('password', _password.text.trim());
+
+        print("Token: ${data['token']}");
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -46,20 +51,15 @@ class _APILoginState extends State<APILogin> {
             backgroundColor: Colors.green,
           ),
         );
-        final String token = data['token'].toString(); // 🔥 TOKEN
+
         Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => HomeAPI(
-                user: user,
-                apiToken: token, // ✅ PASS TOKEN
-              ),
-            )
+          context,
+          MaterialPageRoute(builder: (_) => const HomeAPI()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(data['message'] ?? "Invalid login credentials"),
+          const SnackBar(
+            content: Text("Login failed"),
             backgroundColor: Colors.red,
           ),
         );
@@ -102,11 +102,8 @@ class _APILoginState extends State<APILogin> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.lock_outline,
-                        size: 70, color: Colors.blue),
-
+                    const Icon(Icons.lock_outline, size: 70, color: Colors.blue),
                     const SizedBox(height: 10),
-
                     const Text(
                       "Login",
                       style: TextStyle(
@@ -115,7 +112,6 @@ class _APILoginState extends State<APILogin> {
                         color: Colors.blue,
                       ),
                     ),
-
                     const SizedBox(height: 30),
 
                     _buildField(
@@ -124,8 +120,7 @@ class _APILoginState extends State<APILogin> {
                       icon: Icons.email_outlined,
                       validator: (v) {
                         if (v!.isEmpty) return "Email is required";
-                        if (!RegExp(
-                            r'^[\w-.]+@([\w-]+\.)+[\w]{2,4}$')
+                        if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w]{2,4}$')
                             .hasMatch(v)) {
                           return "Invalid email";
                         }
@@ -158,9 +153,7 @@ class _APILoginState extends State<APILogin> {
                           ),
                         ),
                         child: _isLoading
-                            ? const CircularProgressIndicator(
-                          color: Colors.white,
-                        )
+                            ? const CircularProgressIndicator(color: Colors.white)
                             : const Text(
                           "Login",
                           style: TextStyle(
@@ -218,7 +211,6 @@ class _APILoginState extends State<APILogin> {
     );
   }
 
-  // 🔹 Reusable field (UI SAME)
   Widget _buildField({
     required TextEditingController controller,
     required String label,

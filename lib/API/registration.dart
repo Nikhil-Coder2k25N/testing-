@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'Home.dart';
 import 'loginvalidation.dart';
-import 'models/user_model.dart';
 
 class Registeration extends StatefulWidget {
   const Registeration({super.key});
@@ -22,8 +22,9 @@ class _RegisterationState extends State<Registeration> {
   final TextEditingController _confirmPassword = TextEditingController();
 
   Future<void> _registerUser() async {
-    if (_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate()) return;
 
+    try {
       final response = await http.post(
         Uri.parse('https://sakshamdigitaltechnology.com/api/register'),
         body: {
@@ -36,13 +37,11 @@ class _RegisterationState extends State<Registeration> {
       );
 
       final Map<String, dynamic> jsonData = jsonDecode(response.body);
-      print(jsonData);
+      print("REGISTER RESPONSE: $jsonData");
 
       // 🔴 ERROR CASE
       if (jsonData['status'] == 'error') {
-
         Map<String, dynamic> errors = jsonData['errors'];
-
         String errorMessage = '';
 
         errors.forEach((key, value) {
@@ -52,33 +51,32 @@ class _RegisterationState extends State<Registeration> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
-
         return;
       }
 
-      // 🟢 SUCCESS CASE (jab API user data bheje)
+      // 🟢 SUCCESS CASE
       if (jsonData['status'] == 'success') {
+        final prefs = await SharedPreferences.getInstance();
 
-        final user = User.fromJson(jsonData['user']); // 🔥 FIXED
+        // ✅ Save credentials for auto-login (same as login screen)
+        await prefs.setString('email', _email.text.trim());
+        await prefs.setString('password', _password.text.trim());
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("User Registered Successfully")),
         );
 
-        final String token = jsonData['token'].toString();
-
+        // ✅ Go to Home (Home will fetch user + token itself)
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(
-            builder: (context) => HomeAPI(
-              user: user,
-              apiToken: token, // 🔥 REAL TOKEN FROM REGISTER API
-            ),
-          ),
+          MaterialPageRoute(builder: (_) => const HomeAPI()),
               (route) => false,
         );
-
       }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
     }
   }
 
@@ -97,7 +95,7 @@ class _RegisterationState extends State<Registeration> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black12,
                       blurRadius: 15,
@@ -108,9 +106,9 @@ class _RegisterationState extends State<Registeration> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.person_add_alt_1, size: 70, color: Colors.blue),
+                    const Icon(Icons.person_add_alt_1, size: 70, color: Colors.blue),
                     const SizedBox(height: 10),
-                    Text(
+                    const Text(
                       "Register",
                       style: TextStyle(
                         fontSize: 26,
@@ -120,111 +118,11 @@ class _RegisterationState extends State<Registeration> {
                     ),
                     const SizedBox(height: 25),
 
-                    TextFormField(
-                      controller: _name,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Name is required";
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        labelText: "Full Name",
-                        prefixIcon: Icon(Icons.person_outline),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    TextFormField(
-                      controller: _email,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "email is required";
-                        } else if (!RegExp(
-                          r'^[\w-.]+@([\w-]+\.)+[\w]{2,4}$',
-                        ).hasMatch(value)) {
-                          return "wrong email address";
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        labelText: "Email",
-                        prefixIcon: Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    TextFormField(
-                      controller: _phone,
-                      keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Phone number is required";
-                        } else if (value.length != 10) {
-                          return "Enter valid 10 digit number";
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        labelText: "Phone Number",
-                        prefixIcon: Icon(Icons.phone_outlined),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    TextFormField(
-                      controller: _password,
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Password is required";
-                        } else if (value.length < 6) {
-                          return "Minimum 6 characters required";
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        labelText: "Password",
-                        prefixIcon: Icon(Icons.lock_outline),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    TextFormField(
-                      controller: _confirmPassword,
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Confirm password is required";
-                        } else if (value != _password.text) {
-                          return "Password does not match";
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        labelText: "Confirm Password",
-                        prefixIcon: Icon(Icons.lock_reset),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
+                    _buildField(_name, "Full Name", Icons.person_outline),
+                    _buildEmailField(),
+                    _buildPhoneField(),
+                    _buildPasswordField(),
+                    _buildConfirmPasswordField(),
 
                     const SizedBox(height: 25),
 
@@ -256,16 +154,119 @@ class _RegisterationState extends State<Registeration> {
                       onPressed: () {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (context) => const APILogin()),
+                          MaterialPageRoute(builder: (_) => const APILogin()),
                         );
                       },
-                      child: Text("Already have an account? Login", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600,),),
+                      child: const Text(
+                        "Already have an account? Login",
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildField(TextEditingController controller, String label, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: TextFormField(
+        controller: controller,
+        validator: (value) =>
+        value == null || value.isEmpty ? "$label is required" : null,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmailField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: TextFormField(
+        controller: _email,
+        validator: (value) {
+          if (value == null || value.isEmpty) return "Email is required";
+          if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w]{2,4}$').hasMatch(value)) {
+            return "Enter valid email";
+          }
+          return null;
+        },
+        decoration: InputDecoration(
+          labelText: "Email",
+          prefixIcon: const Icon(Icons.email_outlined),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhoneField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: TextFormField(
+        controller: _phone,
+        keyboardType: TextInputType.phone,
+        validator: (value) {
+          if (value == null || value.isEmpty) return "Phone number is required";
+          if (value.length != 10) return "Enter valid 10 digit number";
+          return null;
+        },
+        decoration: InputDecoration(
+          labelText: "Phone Number",
+          prefixIcon: const Icon(Icons.phone_outlined),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: TextFormField(
+        controller: _password,
+        obscureText: true,
+        validator: (value) {
+          if (value == null || value.isEmpty) return "Password is required";
+          if (value.length < 6) return "Minimum 6 characters required";
+          return null;
+        },
+        decoration: InputDecoration(
+          labelText: "Password",
+          prefixIcon: const Icon(Icons.lock_outline),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConfirmPasswordField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: TextFormField(
+        controller: _confirmPassword,
+        obscureText: true,
+        validator: (value) {
+          if (value == null || value.isEmpty) return "Confirm password is required";
+          if (value != _password.text) return "Password does not match";
+          return null;
+        },
+        decoration: InputDecoration(
+          labelText: "Confirm Password",
+          prefixIcon: const Icon(Icons.lock_reset),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );

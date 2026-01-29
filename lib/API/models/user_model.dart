@@ -149,6 +149,7 @@ class User {
       state: json['state']?.toString(),
       pincode: json['pincode']?.toString(),
       image: json['image']?.toString(),
+
       emailVerifiedAt: json['email_verified_at']?.toString(),
       createdAt: json['created_at']?.toString(),
       updatedAt: json['updated_at']?.toString(),

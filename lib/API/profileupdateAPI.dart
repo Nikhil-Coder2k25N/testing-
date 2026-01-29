@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -39,7 +40,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
     address = TextEditingController(text: widget.user.address ?? "");
     city = TextEditingController(text: widget.user.city ?? "");
     state = TextEditingController(text: widget.user.state ?? "");
-    pincode = TextEditingController(text: widget.user.pincode ?? "");
+    pincode = TextEditingController(text: widget.user.pincode?.toString() ?? "");
   }
 
   Future<void> pickImage() async {
@@ -52,63 +53,60 @@ class _UpdateProfileState extends State<UpdateProfile> {
     }
   }
 
-  int _convertStateToId(String stateName) {
-    const states = {
-      "Madhya Pradesh": 1,
-      "Uttar Pradesh": 2,
-      "Delhi": 3,
-      "Maharashtra": 4,
-      "Gujarat": 5,
-      "Rajasthan": 6,
-    };
-    return states[stateName] ?? 0;
-  }
-
   Future<void> updateProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => loading = true);
 
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('https://sakshamdigitaltechnology.com/api/user-profile'),
-    );
-
-    request.headers.addAll({
-      'Authorization': 'Bearer ${widget.apiToken}',
-      'Accept': 'application/json',
-    });
-
-    request.fields.addAll({
-      'name': name.text.trim(),
-      'dob': dob.text.trim(),
-      'address': address.text.trim(),
-      'city': city.text.trim(),
-      'state': state.text.trim(),
-      'pincode': pincode.text.trim(),
-    });
-
-    if (_image != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath('image', _image!.path),
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('https://sakshamdigitaltechnology.com/api/user-profile'),
       );
-    }
 
-    final response = await request.send();
-    final responseBody = await response.stream.bytesToString();
+      request.headers.addAll({
+        'Authorization': 'Bearer ${widget.apiToken}',
+        'Accept': 'application/json',
+      });
 
-    setState(() => loading = false);
+      request.fields.addAll({
+        'name': name.text.trim(),
+        'dob': dob.text.trim(),
+        'address': address.text.trim(),
+        'city': city.text.trim(),
+        'state': state.text.trim(),
+        'pincode': pincode.text.trim(),
+      });
 
-    print("UPDATE RESPONSE: $responseBody");
+      // ✅ Only add image if selected
+      if (_image != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('image', _image!.path),
+        );
+      }
 
-    if (response.statusCode == 200) {
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      final data = jsonDecode(responseBody);
+
+      setState(() => loading = false);
+
+      print("UPDATE RESPONSE: $responseBody");
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Profile Updated Successfully")),
+        );
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? "Update failed")),
+        );
+      }
+    } catch (e) {
+      setState(() => loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile Updated Successfully")),
-      );
-      Navigator.pop(context, true);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(responseBody)),
+        SnackBar(content: Text("Error: $e")),
       );
     }
   }
