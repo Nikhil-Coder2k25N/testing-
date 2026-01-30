@@ -1,13 +1,70 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
 
   @override
   State<UserPage> createState() => _UserPageState();
+
 }
 
 class _UserPageState extends State<UserPage> {
+
+  bool isSubmitting = false;
+
+  Future<void> submitApplication() async {
+    if (isSubmitting) return;
+
+    if (nameController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        phoneController.text.isEmpty ||
+        addressController.text.isEmpty ||
+        reasonController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all fields")),
+      );
+      return;
+    }
+
+    setState(() => isSubmitting = true);
+
+    try {
+      String id = const Uuid().v4();
+
+      await FirebaseFirestore.instance.collection('Applications').doc(id).set({
+        'id': id,
+        'name': nameController.text.trim(),
+        'email': emailController.text.trim(),
+        'phone': phoneController.text.trim(),
+        'department': selectedDepartment,
+        'address': addressController.text.trim(),
+        'reason': reasonController.text.trim(),
+        'status': 'Pending',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Application Submitted Successfully")),
+      );
+
+      nameController.clear();
+      emailController.clear();
+      phoneController.clear();
+      addressController.clear();
+      reasonController.clear();
+      setState(() => selectedDepartment = "Computer Science");
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+
+    setState(() => isSubmitting = false); // 🔥 Stop loading
+  }
+
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
@@ -26,7 +83,7 @@ class _UserPageState extends State<UserPage> {
 
   InputDecoration inputDecoration(String hint) {
     return InputDecoration(
-      hintText: hint,
+      // hintText: hint,
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -71,7 +128,7 @@ class _UserPageState extends State<UserPage> {
             const SizedBox(height: 6),
             TextField(
               controller: nameController,
-              decoration: inputDecoration("Nikhil Singh"),
+              decoration: inputDecoration("Enter your full name...",),
             ),
             const SizedBox(height: 16),
 
@@ -162,10 +219,24 @@ class _UserPageState extends State<UserPage> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                onPressed: () {},
-                child: const Text("Submit Application",
-                    style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold)),
+                onPressed: isSubmitting ? null : submitApplication,
+                child: isSubmitting
+                    ? const SizedBox(
+                  height: 22,
+                  width: 22,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2.5,
+                  ),
+                )
+                    : const Text(
+                  "Submit Application",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],
