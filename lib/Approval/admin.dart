@@ -12,7 +12,7 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
 
-  String? loadingId; // 👈 Track which application is loading
+  String? loadingId; 
 
   Future<void> sendToGoogleSheet(Map<String, dynamic> data) async {
     const String url =
@@ -28,7 +28,7 @@ class _AdminPageState extends State<AdminPage> {
   Future<void> updateStatus(
       String id, Map<String, dynamic> data, String newStatus) async {
 
-    setState(() => loadingId = id); // 🔥 Start loader for this card
+    setState(() => loadingId = id);
 
     await FirebaseFirestore.instance
         .collection('Applications')
@@ -45,7 +45,7 @@ class _AdminPageState extends State<AdminPage> {
       "status": newStatus,
     });
 
-    setState(() => loadingId = null); // 🔥 Stop loader
+    setState(() => loadingId = null);
   }
 
   @override

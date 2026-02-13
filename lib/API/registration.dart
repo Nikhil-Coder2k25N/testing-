@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'Home.dart';
+import 'Profile.dart';
 import 'loginvalidation.dart';
 
 class Registeration extends StatefulWidget {
@@ -69,7 +69,7 @@ class _RegisterationState extends State<Registeration> {
         // ✅ Go to Home (Home will fetch user + token itself)
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const HomeAPI()),
+          MaterialPageRoute(builder: (_) => const ProfileAPI()),
               (route) => false,
         );
       }

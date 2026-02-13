@@ -9,14 +9,14 @@ import 'loginvalidation.dart';
 import 'models/user_model.dart';
 import 'profileupdateAPI.dart';
 
-class HomeAPI extends StatefulWidget {
-  const HomeAPI({super.key});
+class ProfileAPI extends StatefulWidget {
+  const ProfileAPI({super.key});
 
   @override
-  State<HomeAPI> createState() => _HomeAPIState();
+  State<ProfileAPI> createState() => _ProfileAPIState();
 }
 
-class _HomeAPIState extends State<HomeAPI> {
+class _ProfileAPIState extends State<ProfileAPI> {
 
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();

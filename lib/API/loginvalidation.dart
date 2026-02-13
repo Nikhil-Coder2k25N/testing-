@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'Home.dart';
+import '../bottomnavigation.dart';
+import 'Profile.dart';
 import 'apiforgetpass.dart';
 import 'registration.dart';
 
@@ -54,7 +55,7 @@ class _APILoginState extends State<APILogin> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const HomeAPI()),
+          MaterialPageRoute(builder: (_) => BottomNavigation()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
