@@ -1,6 +1,6 @@
 # myfirstclass...
 
-My First class Saksham Project
+My Course First class Saksham Project 
 
 ## Getting Started
 
