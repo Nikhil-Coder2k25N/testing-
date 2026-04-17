@@ -8,7 +8,6 @@ class BankPage extends StatefulWidget {
 
 class _BankPageState extends State<BankPage> {
 
-  //my Logic
   Future<void> _saveBankDetails(BuildContext context) async {
     try {
       await FirebaseFirestore.instance
